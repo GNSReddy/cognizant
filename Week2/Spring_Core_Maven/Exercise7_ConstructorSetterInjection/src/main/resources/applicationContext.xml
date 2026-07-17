@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Bean definition for BookRepository -->
+    <bean id="bookRepository" class="com.library.repository.BookRepository" />
+
+    <!--
+        ===================================================================
+        CONSTRUCTOR INJECTION
+        ===================================================================
+        Uses <constructor-arg> to pass dependencies through the constructor.
+        Spring calls: new BookService(bookRepository)
+        
+        - The dependency is MANDATORY — the bean cannot be created without it.
+        - Promotes immutability (dependency set once via constructor).
+        - Ensures the bean is fully initialized when created.
+        
+        "ref" attribute references another bean by its id.
+        "value" attribute injects a simple value (String, int, etc.).
+        ===================================================================
+    -->
+    <bean id="bookServiceConstructor" class="com.library.service.BookService">
+        <!-- Constructor injection: passes bookRepository and serviceName to constructor -->
+        <constructor-arg ref="bookRepository" />
+        <constructor-arg value="ConstructorInjectedService" />
+    </bean>
+
+    <!--
+        ===================================================================
+        SETTER INJECTION
+        ===================================================================
+        Uses <property> to inject dependencies via setter methods.
+        Spring calls: bookService.setBookRepository(bookRepository)
+        
+        - The dependency is OPTIONAL — the bean is created first, then setters called.
+        - Allows reconfiguration (setter can be called again later).
+        - Bean may exist in a partially initialized state before setters run.
+        
+        "name" maps to the setter method: name="bookRepository" → setBookRepository()
+        "ref" references another bean by its id.
+        "value" injects a simple value.
+        ===================================================================
+    -->
+    <bean id="bookServiceSetter" class="com.library.service.BookService">
+        <!-- Setter injection: calls setBookRepository() and setServiceName() -->
+        <property name="bookRepository" ref="bookRepository" />
+        <property name="serviceName" value="SetterInjectedService" />
+    </bean>
+
+</beans>

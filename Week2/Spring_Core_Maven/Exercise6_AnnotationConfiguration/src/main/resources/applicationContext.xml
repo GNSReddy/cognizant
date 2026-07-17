@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--
+        Component Scanning
+        ==================
+        Tells Spring to automatically scan the specified package (and all sub-packages)
+        for classes annotated with stereotype annotations:
+          - @Component   (generic Spring-managed bean)
+          - @Service     (business logic layer)
+          - @Repository  (data access layer)
+          - @Controller  (web layer)
+
+        When a class with one of these annotations is found, Spring automatically:
+          1. Registers it as a bean in the IoC container
+          2. Uses the class name (lowercase first letter) as the default bean id
+          3. Processes @Autowired annotations for dependency injection
+
+        This REPLACES the need for explicit <bean> definitions in XML!
+    -->
+    <context:component-scan base-package="com.library" />
+
+    <!--
+        NOTE: No <bean> definitions needed!
+        Unlike previous exercises where we had:
+          <bean id="bookRepository" class="com.library.repository.BookRepository" />
+          <bean id="bookService" class="com.library.service.BookService">
+              <property name="bookRepository" ref="bookRepository" />
+          </bean>
+
+        Now Spring discovers beans automatically via annotations.
+    -->
+
+</beans>

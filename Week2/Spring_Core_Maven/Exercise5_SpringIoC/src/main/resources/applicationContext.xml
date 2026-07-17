@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        Spring IoC Container Configuration
+        ===================================
+        The IoC (Inversion of Control) container is the core of the Spring Framework.
+        This XML file serves as the configuration metadata that tells the IoC container
+        how to instantiate, configure, and assemble the objects (beans) in the application.
+
+        Bean Lifecycle in the IoC Container:
+        1. Container reads this XML configuration
+        2. Bean definitions are created from <bean> elements
+        3. Beans are instantiated (using constructors)
+        4. Dependencies are injected (via setter or constructor)
+        5. Beans are ready for use
+        6. On container shutdown, destruction callbacks are invoked
+    -->
+
+    <!-- Bean definition for BookRepository -->
+    <!-- scope="singleton" is the DEFAULT - only one instance is created per container -->
+    <bean id="bookRepository" class="com.library.repository.BookRepository"
+          scope="singleton"
+          init-method="init"
+          destroy-method="cleanup">
+    </bean>
+
+    <!-- Bean definition for BookService with Setter Injection -->
+    <!-- The IoC container wires BookRepository into BookService automatically -->
+    <bean id="bookService" class="com.library.service.BookService"
+          scope="singleton"
+          init-method="init"
+          destroy-method="cleanup">
+        <!-- Setter Injection: container calls setBookRepository(bookRepository) -->
+        <property name="bookRepository" ref="bookRepository" />
+    </bean>
+
+</beans>
