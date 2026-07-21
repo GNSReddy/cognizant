@@ -1,0 +1,7 @@
+server:
+  port: 8082
+
+spring:
+  security:
+    jwt:
+      secret: SecretKeyForJWTSigningMustBeAtLeast32BytesLongStringForHS256Algorithm

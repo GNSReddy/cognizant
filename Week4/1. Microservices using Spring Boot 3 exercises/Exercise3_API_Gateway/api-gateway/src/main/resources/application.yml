@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service-route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/customers/**
+          filters:
+            - RewritePath=/api/customers/(?<segment>.*), /customers/$\{segment}
+
+        - id: billing-service-route
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/billing/**
+          filters:
+            - RewritePath=/api/billing/(?<segment>.*), /billing/$\{segment}
