@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +20,18 @@ import java.util.Optional;
  *
  * Handbook: Spring Data JPA Hands-on 3
  *   Hands-on 1: @Query methods
- *   Hands-on 3: Pagination using PageRequest ← ADDED NOW
+ *   Hands-on 3: Pagination using PageRequest
+ *   Hands-on 4: Sorting using Sort ← ADDED NOW
+ *
+ * Sort key concepts:
+ *   Sort.by(Sort.Direction.ASC, "name")  → ORDER BY co_name ASC
+ *   Sort.by(Sort.Direction.DESC, "name") → ORDER BY co_name DESC
+ *   findAll(Sort) returns all records sorted — no pagination.
+ *   PageRequest.of(page, size, Sort) = pagination + sorting together.
+ *
+ * Field names in Sort use the JAVA FIELD NAMES (not DB column names):
+ *   "name" → mapped to co_name column by Hibernate
+ *   "code" → mapped to co_code column by Hibernate
  */
 @Service
 public class CountryService {
@@ -37,7 +49,7 @@ public class CountryService {
         return result.get();
     }
 
-    // ── Hands-on 1: @Query methods (carried forward) ─────────────────────
+    // ── Hands-on 1: @Query (carried forward) ─────────────────────────────
     @Transactional
     public List<Country> findCountryByName(String name) {
         return countryRepository.findCountryByName(name);
@@ -68,52 +80,80 @@ public class CountryService {
         return countryRepository.findCountriesEndingWithIa();
     }
 
-    // ── Hands-on 3: Pagination ────────────────────────────────────────────
-
-    /**
-     * Get all countries — paginated using PageRequest.
-     *
-     * PageRequest.of(pageNumber, pageSize):
-     *   Creates a Pageable object specifying which page and how many records.
-     *   pageNumber is 0-indexed: page 0 = first page, page 1 = second page...
-     *
-     * Two SQL queries fired by Hibernate:
-     *   Data : SELECT co_code, co_name FROM country LIMIT {pageSize} OFFSET {pageNumber * pageSize}
-     *   Count: SELECT COUNT(*) FROM country
-     *
-     * Page<Country> contains:
-     *   getContent()        → List<Country> for the current page
-     *   getTotalElements()  → total records in ALL pages (e.g., 249)
-     *   getTotalPages()     → total number of pages (e.g., 249/10 = 25)
-     *   getNumber()         → current page number (0-indexed)
-     *   isFirst() / isLast()→ boundary checks
-     *
-     * @param pageNumber 0-indexed page number
-     * @param pageSize   number of records per page
-     * @return Page<Country> for the requested page
-     */
+    // ── Hands-on 3: Pagination (carried forward) ──────────────────────────
     @Transactional
     public Page<Country> getCountriesByPage(int pageNumber, int pageSize) {
-        LOGGER.debug("Inside getCountriesByPage, page={}, size={}", pageNumber, pageSize);
         return countryRepository.findAll(PageRequest.of(pageNumber, pageSize));
     }
 
-    /**
-     * Search countries by keyword — paginated.
-     *
-     * Applies the LIKE filter AND pagination together.
-     * SQL: SELECT * FROM country WHERE co_name LIKE '%keyword%' LIMIT ? OFFSET ?
-     *
-     * @param keyword    substring to filter by
-     * @param pageNumber 0-indexed page number
-     * @param pageSize   records per page
-     * @return Page<Country> of filtered results for the requested page
-     */
     @Transactional
     public Page<Country> searchByKeywordPageable(String keyword, int pageNumber, int pageSize) {
-        LOGGER.debug("Inside searchByKeywordPageable, keyword={}, page={}, size={}",
-                keyword, pageNumber, pageSize);
         return countryRepository.findByKeywordPageable(keyword, PageRequest.of(pageNumber, pageSize));
+    }
+
+    // ── Hands-on 4: Sorting ───────────────────────────────────────────────
+
+    /**
+     * Get all countries sorted by name in ASCENDING order.
+     *
+     * Sort.by(Sort.Direction.ASC, "name"):
+     *   "name" = Java field name in Country entity
+     *   Hibernate maps this to co_name column
+     *
+     * Generated SQL:
+     *   SELECT co_code, co_name FROM country ORDER BY co_name ASC
+     *
+     * Note: findAll(Sort) is inherited from JpaRepository.
+     *   No new method needed in CountryRepository.
+     *
+     * @return List of all countries sorted A → Z by name
+     */
+    @Transactional
+    public List<Country> getCountriesSortedAsc() {
+        LOGGER.debug("Inside getCountriesSortedAsc");
+        Sort sort = Sort.by(Sort.Direction.ASC, "name");
+        return countryRepository.findAll(sort);
+    }
+
+    /**
+     * Get all countries sorted by name in DESCENDING order.
+     *
+     * Sort.by(Sort.Direction.DESC, "name"):
+     * Generated SQL:
+     *   SELECT co_code, co_name FROM country ORDER BY co_name DESC
+     *
+     * @return List of all countries sorted Z → A by name
+     */
+    @Transactional
+    public List<Country> getCountriesSortedDesc() {
+        LOGGER.debug("Inside getCountriesSortedDesc");
+        Sort sort = Sort.by(Sort.Direction.DESC, "name");
+        return countryRepository.findAll(sort);
+    }
+
+    /**
+     * Get all countries — sorted AND paginated.
+     *
+     * Combining Sort with PageRequest:
+     *   PageRequest.of(pageNumber, pageSize, Sort)
+     *   Sorting direction is applied within each page.
+     *
+     * Generated SQL:
+     *   SELECT co_code, co_name FROM country
+     *   ORDER BY co_name ASC LIMIT ? OFFSET ?
+     *
+     * @param pageNumber 0-indexed page
+     * @param pageSize   records per page
+     * @param direction  ASC or DESC
+     * @return Page<Country> sorted and paginated
+     */
+    @Transactional
+    public Page<Country> getCountriesSortedAndPaged(int pageNumber, int pageSize,
+                                                     Sort.Direction direction) {
+        LOGGER.debug("Inside getCountriesSortedAndPaged, page={}, size={}, dir={}",
+                pageNumber, pageSize, direction);
+        Sort sort = Sort.by(direction, "name");
+        return countryRepository.findAll(PageRequest.of(pageNumber, pageSize, sort));
     }
 
 }
