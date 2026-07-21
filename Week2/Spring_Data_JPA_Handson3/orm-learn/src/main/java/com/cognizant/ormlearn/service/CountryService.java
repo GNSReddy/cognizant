@@ -6,6 +6,8 @@ import com.cognizant.ormlearn.service.exception.CountryNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,13 +15,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * CountryService - Service Layer for Country @Query operations.
+ * CountryService - Service Layer for Country operations.
  *
- * Handbook: Spring Data JPA Hands-on 3 — Hands on 1
- * Topic: Write JPQL Queries using @Query annotation
- *
- * Each method delegates to a @Query-annotated method in CountryRepository.
- * Spring Data JPA executes the JPQL/SQL specified in @Query.
+ * Handbook: Spring Data JPA Hands-on 3
+ *   Hands-on 1: @Query methods
+ *   Hands-on 3: Pagination using PageRequest ← ADDED NOW
  */
 @Service
 public class CountryService {
@@ -29,105 +29,91 @@ public class CountryService {
     @Autowired
     private CountryRepository countryRepository;
 
-    // ── Base method carried forward from Handson 1 ───────────────────────
-
+    // ── Base CRUD ─────────────────────────────────────────────────────────
     @Transactional
     public Country findCountryByCode(String code) throws CountryNotFoundException {
-        LOGGER.debug("Inside findCountryByCode, code={}", code);
         Optional<Country> result = countryRepository.findById(code);
-        if (!result.isPresent()) {
-            throw new CountryNotFoundException("Country not found: " + code);
-        }
+        if (!result.isPresent()) throw new CountryNotFoundException("Country not found: " + code);
         return result.get();
     }
 
-    // ── @Query Methods — Hands-on 1 of Handbook 3 ───────────────────────
-
-    /**
-     * Find country by exact name using JPQL positional parameter (?1).
-     *
-     * Delegates to: @Query("SELECT c FROM Country c WHERE c.name = ?1")
-     * SQL: SELECT co_code, co_name FROM country WHERE co_name = ?
-     *
-     * @param name the exact country name to search
-     * @return List of matching Country entities
-     */
+    // ── Hands-on 1: @Query methods (carried forward) ─────────────────────
     @Transactional
     public List<Country> findCountryByName(String name) {
-        LOGGER.debug("Inside findCountryByName, name={}", name);
         return countryRepository.findCountryByName(name);
     }
 
-    /**
-     * Search countries by keyword using JPQL named parameter (:keyword).
-     *
-     * Delegates to: @Query("SELECT c FROM Country c WHERE c.name LIKE %:keyword%")
-     * SQL: SELECT co_code, co_name FROM country WHERE co_name LIKE '%keyword%'
-     *
-     * @param keyword substring to search for in country names
-     * @return List of countries whose name contains the keyword
-     */
     @Transactional
     public List<Country> searchByKeyword(String keyword) {
-        LOGGER.debug("Inside searchByKeyword, keyword={}", keyword);
         return countryRepository.findByKeyword(keyword);
     }
 
-    /**
-     * Get all countries sorted A→Z using JPQL ORDER BY.
-     *
-     * Delegates to: @Query("SELECT c FROM Country c ORDER BY c.name ASC")
-     * SQL: SELECT co_code, co_name FROM country ORDER BY co_name ASC
-     *
-     * @return List of all countries sorted alphabetically by name
-     */
     @Transactional
     public List<Country> getAllCountriesOrdered() {
-        LOGGER.debug("Inside getAllCountriesOrdered");
         return countryRepository.findAllCountriesOrderedByName();
     }
 
-    /**
-     * Find countries starting with a letter using JPQL LIKE.
-     *
-     * Delegates to: @Query("SELECT c FROM Country c WHERE c.name LIKE :letter%")
-     * SQL: SELECT co_code, co_name FROM country WHERE co_name LIKE 'letter%'
-     *
-     * @param letter starting character to filter by
-     * @return List of countries whose name starts with the given letter
-     */
     @Transactional
     public List<Country> findByNameStartingWith(String letter) {
-        LOGGER.debug("Inside findByNameStartingWith, letter={}", letter);
         return countryRepository.findByNameStartingWithLetter(letter);
     }
 
-    /**
-     * Count total countries using JPQL COUNT aggregate.
-     *
-     * Delegates to: @Query("SELECT COUNT(c) FROM Country c")
-     * SQL: SELECT COUNT(*) FROM country
-     *
-     * @return total count of country records
-     */
     @Transactional
     public long countCountries() {
-        LOGGER.debug("Inside countCountries");
         return countryRepository.countAllCountries();
     }
 
-    /**
-     * Find countries ending with "ia" using native SQL query.
-     *
-     * Delegates to: @Query(value="SELECT * FROM country WHERE co_name LIKE '%ia'",
-     *                      nativeQuery=true)
-     *
-     * @return List of countries whose name ends with "ia"
-     */
     @Transactional
     public List<Country> findCountriesEndingWithIa() {
-        LOGGER.debug("Inside findCountriesEndingWithIa");
         return countryRepository.findCountriesEndingWithIa();
+    }
+
+    // ── Hands-on 3: Pagination ────────────────────────────────────────────
+
+    /**
+     * Get all countries — paginated using PageRequest.
+     *
+     * PageRequest.of(pageNumber, pageSize):
+     *   Creates a Pageable object specifying which page and how many records.
+     *   pageNumber is 0-indexed: page 0 = first page, page 1 = second page...
+     *
+     * Two SQL queries fired by Hibernate:
+     *   Data : SELECT co_code, co_name FROM country LIMIT {pageSize} OFFSET {pageNumber * pageSize}
+     *   Count: SELECT COUNT(*) FROM country
+     *
+     * Page<Country> contains:
+     *   getContent()        → List<Country> for the current page
+     *   getTotalElements()  → total records in ALL pages (e.g., 249)
+     *   getTotalPages()     → total number of pages (e.g., 249/10 = 25)
+     *   getNumber()         → current page number (0-indexed)
+     *   isFirst() / isLast()→ boundary checks
+     *
+     * @param pageNumber 0-indexed page number
+     * @param pageSize   number of records per page
+     * @return Page<Country> for the requested page
+     */
+    @Transactional
+    public Page<Country> getCountriesByPage(int pageNumber, int pageSize) {
+        LOGGER.debug("Inside getCountriesByPage, page={}, size={}", pageNumber, pageSize);
+        return countryRepository.findAll(PageRequest.of(pageNumber, pageSize));
+    }
+
+    /**
+     * Search countries by keyword — paginated.
+     *
+     * Applies the LIKE filter AND pagination together.
+     * SQL: SELECT * FROM country WHERE co_name LIKE '%keyword%' LIMIT ? OFFSET ?
+     *
+     * @param keyword    substring to filter by
+     * @param pageNumber 0-indexed page number
+     * @param pageSize   records per page
+     * @return Page<Country> of filtered results for the requested page
+     */
+    @Transactional
+    public Page<Country> searchByKeywordPageable(String keyword, int pageNumber, int pageSize) {
+        LOGGER.debug("Inside searchByKeywordPageable, keyword={}, page={}, size={}",
+                keyword, pageNumber, pageSize);
+        return countryRepository.findByKeywordPageable(keyword, PageRequest.of(pageNumber, pageSize));
     }
 
 }
