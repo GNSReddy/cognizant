@@ -1,0 +1,10 @@
+-------------------------------------------------------------------------------
+Test set: exercise1.UserControllerTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.014 s <<< FAILURE! - in exercise1.UserControllerTest
+testGetUserEndpointMocked  Time elapsed: 0.008 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'userRepositoryEx3P4' defined in exercise3.UserRepository defined in @EnableJpaRepositories declared on SpringMockApplication: Cannot create inner bean '(inner bean)#57ad1178' of type [org.springframework.orm.jpa.SharedEntityManagerCreator] while setting bean property 'entityManager'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name '(inner bean)#57ad1178': Cannot resolve reference to bean 'entityManagerFactory' while setting constructor argument; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No bean named 'entityManagerFactory' available
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name '(inner bean)#57ad1178': Cannot resolve reference to bean 'entityManagerFactory' while setting constructor argument; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No bean named 'entityManagerFactory' available
+Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No bean named 'entityManagerFactory' available
+

@@ -1,0 +1,16 @@
+02:37:20.019 [main] ERROR com.cognizant.logging.LoggingExample - This is an error message
+02:37:20.022 [main] WARN  com.cognizant.logging.LoggingExample - This is a warning message
+02:37:20.022 [main] INFO  com.cognizant.logging.LoggingExample - User Alice logged in with 3 attempts
+02:37:20.024 [main] DEBUG com.cognizant.logging.LoggingExample - Debug information: user id is 1001
+02:49:39.555 [main] ERROR exercise1.LoggingExample - Exercise 1: This is an error message
+02:49:39.557 [main] WARN  exercise1.LoggingExample - Exercise 1: This is a warning message
+02:49:39.579 [main] INFO  exercise2.LoggingExample - Exercise 2: User Bob logged in with ID 123
+02:49:39.590 [main] INFO  exercise3.LoggingExample - Exercise 3: Logging to both console and file
+02:51:09.107 [main] ERROR exercise1.LoggingExample - Exercise 1: This is an error message
+02:51:09.109 [main] WARN  exercise1.LoggingExample - Exercise 1: This is a warning message
+02:51:09.129 [main] INFO  exercise2.LoggingExample - Exercise 2: User Bob logged in with ID 123
+02:51:09.137 [main] INFO  exercise3.LoggingExample - Exercise 3: Logging to both console and file
+02:52:33.532 [main] ERROR exercise1.LoggingExample - Exercise 1: This is an error message
+02:52:33.532 [main] WARN  exercise1.LoggingExample - Exercise 1: This is a warning message
+02:52:33.560 [main] INFO  exercise2.LoggingExample - Exercise 2: User Bob logged in with ID 123
+02:52:33.570 [main] INFO  exercise3.LoggingExample - Exercise 3: Logging to both console and file
